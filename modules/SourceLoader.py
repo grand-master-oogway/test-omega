@@ -5,8 +5,10 @@ import time
 import threading
 from typing import List, Tuple
 
+
 class OpencvReader():
     _TIME = 1
+
     def __init__(self, sources: List):
         self._sources = sources
 
@@ -41,7 +43,6 @@ class OpencvReader():
             _read, frame = capture.read()
             if not _read:
                 capture = self._initialize_capture(source.rtsp)
-
             source.frame = frame
 
     @staticmethod
