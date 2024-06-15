@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from modules import Parsing
 from modules import run
+from modules import Parsing
 
 
 def main():

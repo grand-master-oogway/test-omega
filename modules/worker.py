@@ -1,5 +1,5 @@
-from .SourceLoader import OpencvReader
-from .SourceAnalyzer import SourceAnalyzer
+from .stream.source_loader import OpencvReader
+from .stream.source_analyzer import SourceAnalyzer
 
 
 def run(source_list: list) -> None:

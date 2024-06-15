@@ -1,5 +1,5 @@
 import numpy as np
-from .SourceLoader import OpencvReader
+from modules.stream.source_loader import OpencvReader
 
 class SourceAnalyzer():
     def __init__(self, reader: OpencvReader):
