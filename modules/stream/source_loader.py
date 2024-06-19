@@ -2,23 +2,30 @@ from __future__ import annotations
 
 import cv2
 import time
+import logging
 import threading
+from objects import Config
 from typing import List, Tuple
 
 
 class OpencvReader():
     _TIME = 1
 
-    def __init__(self, sources: List):
-        self._sources = sources
+    def __init__(self, sources: Config, debug: bool):
+        self._sources = sources.sources
+
+        self._logger: logging.Logger = logging.getLogger(type(self).__name__)
+        self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
     def start(self) -> OpencvReader:
+        self._logger.debug('create thread for each source')
+
         for source in self._sources:
             threading.Thread(target=self._update, args=(source,), daemon=True).start()
 
         return self
 
-    def get_frames(self) -> Tuple[List, list]:
+    def get_frames(self) -> Tuple[List, List]:
         frames, ids = [], []
         for i, source in enumerate(self._sources):
             frames.append(source.frame)
@@ -43,6 +50,7 @@ class OpencvReader():
             _read, frame = capture.read()
             if not _read:
                 capture = self._initialize_capture(source.rtsp)
+
             source.frame = frame
 
     @staticmethod

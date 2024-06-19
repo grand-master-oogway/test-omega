@@ -1,0 +1,16 @@
+{
+  "sources_data": {
+    "sources": [
+      "rtsp://admin:hVJ5WbnSS@10.2.200.11:554",
+      "rtsp://admin:hVJ5WbnSS@10.2.200.11:554",
+      "rtsp://admin:hVJ5WbnSS@10.2.200.11:554"
+    ],
+
+    "yolomodels": [
+      5,
+      7,
+      8
+
+    ]
+  }
+}
