@@ -8,29 +8,25 @@ from objects import Config
 from typing import List, Tuple
 
 
-class OpencvReader():
+class OpencvReader:
     _TIME = 1
 
-    def __init__(self, sources: Config, debug: bool):
-        self._sources = sources.sources
-
+    def __init__(self, sources_data: Config, debug: bool = True):
         self._logger: logging.Logger = logging.getLogger(type(self).__name__)
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
+        self._source = sources_data.sources
 
     def start(self) -> OpencvReader:
         self._logger.debug('create thread for each source')
 
-        for source in self._sources:
-            threading.Thread(target=self._update, args=(source,), daemon=True).start()
+        threading.Thread(target=self._update, args=(self._source,), daemon=True).start()
 
         return self
 
-    def get_frames(self) -> Tuple[List, List]:
-        frames, ids = [], []
-        for i, source in enumerate(self._sources):
-            frames.append(source.frame)
-            ids.append(i)
-        return frames, ids
+    def get_frames(self) -> List:
+        frames = [self._source.frame]
+        return frames
 
     def _initialize_capture(self, source) -> cv2.VideoCapture:
         capture = cv2.VideoCapture(source)
@@ -54,6 +50,6 @@ class OpencvReader():
             source.frame = frame
 
     @staticmethod
-    def show_frames(frame, number) -> None:
-        cv2.imshow(f'{number}', frame)
+    def show_frames(frame) -> None:
+        cv2.imshow(f'{1}', frame)
         cv2.waitKey(1)

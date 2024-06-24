@@ -21,7 +21,8 @@ def parsing() -> ArgumentParser:
 def _read_config(path: str) -> Config:
     with open(path) as f:
         data = json.load(f)
-        config = Config(list(data['sources_data'].values())[0])
+        config = Config(data)
+        config.get_attributes
     return config
 
 
