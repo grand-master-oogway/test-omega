@@ -20,8 +20,7 @@ def parsing() -> ArgumentParser:
 
 def _read_config(path: str) -> Config:
     with open(path) as f:
-        data = json.load(f)
-        config = Config(data)
+        config = Config(json.load(f))
         config.get_attributes
     return config
 

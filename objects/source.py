@@ -7,3 +7,4 @@ from dataclasses import dataclass
 class Source:
     rtsp: Union[str, int]
     frame: np.ndarray = 0
+

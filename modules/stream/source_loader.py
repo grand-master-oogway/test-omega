@@ -15,18 +15,23 @@ class OpencvReader:
         self._logger: logging.Logger = logging.getLogger(type(self).__name__)
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
-        self._source = sources_data.sources
+        self._sources = sources_data.sources
+        # print('sources_data opencv', sources_data.sources)
 
     def start(self) -> OpencvReader:
         self._logger.debug('create thread for each source')
-
-        threading.Thread(target=self._update, args=(self._source,), daemon=True).start()
+        for source in self._sources:
+            threading.Thread(target=self._update, args=(source,), daemon=True).start()
 
         return self
 
-    def get_frames(self) -> List:
-        frames = [self._source.frame]
-        return frames
+    def get_frames(self) -> Tuple[List, List]:
+        frames, ids = [], []
+        for i, source in enumerate(self._sources):
+            frames.append(source.frame)
+            # print('get_frames', frames)
+            ids.append(i)
+        return frames, ids
 
     def _initialize_capture(self, source) -> cv2.VideoCapture:
         capture = cv2.VideoCapture(source)
@@ -35,7 +40,6 @@ class OpencvReader:
                 capture.release()
                 time.sleep(self._TIME)
                 capture = cv2.VideoCapture(source)
-
             return capture
 
     def _update(self, source) -> None:
@@ -50,6 +54,6 @@ class OpencvReader:
             source.frame = frame
 
     @staticmethod
-    def show_frames(frame) -> None:
-        cv2.imshow(f'{1}', frame)
+    def show_frames(frame, number) -> None:
+        cv2.imshow(f'{number}', frame)
         cv2.waitKey(1)
