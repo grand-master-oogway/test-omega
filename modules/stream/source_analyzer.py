@@ -16,32 +16,20 @@ class SourceAnalyzer:
     #     res = None
     #     while True:
     #         frames, ids = self.reader.get_frames()
+    #         Detector(frames, ids).run()
     #         for frame, _id in zip(frames, ids):
     #             if isinstance(frame, np.ndarray):
+    #                 print("frame --> ", frame)
     #                 self.reader.show_frames(frame, _id)
 
     def run(self) -> None:
         self._logger.debug('run SourceAnalyzer')
-        i = 0
+        res = None
         while True:
             frames, ids = self.reader.get_frames()
-            # print(i)
-            # i += 1
             if len(np.asarray(frames).shape) == 1:
-                for frame, _id in zip(frames, ids):
-                    if isinstance(frame, np.ndarray):
-                        self.reader.show_frames(frame, _id)
-            else:
-                res = Detector(frames, _id).run()
+                continue
+            # print(frames)
+            # print(np.asarray(frames).shape)
+            self.reader.show_frames(Detector(frames, ids).run(), 0)
 
-                if res is None:
-                    for frame, _id in zip(frames, ids):
-                        if isinstance(frame, np.ndarray):
-                            self.reader.show_frames(frame, _id)
-
-                else:
-                    # print('1')
-                    # break
-                    for _id in ids:
-                        if isinstance(res, np.ndarray):
-                            self.reader.show_frames(res, _id)
