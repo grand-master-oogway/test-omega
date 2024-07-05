@@ -29,7 +29,6 @@ class OpencvReader:
         frames, ids = [], []
         for i, source in enumerate(self._sources):
             frames.append(source.frame)
-            # print('get_frames', frames)
             ids.append(i)
         return frames, ids
 
