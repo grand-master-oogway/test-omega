@@ -46,7 +46,6 @@ class Detector:
         self.conf_thres = 0.25  # confidence threshold
         self.iou_thres = 0.45  # NMS IOU threshold
         self.max_det = 1000  # maximum detections per image
-        view_img = False  # show results
         self.classes = 0  # filter by class: --class 0, or --class 0 2 3
         self.agnostic_nms = False  # class-agnostic NMS
         self.hide_labels = False  # hide labels
