@@ -5,11 +5,12 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from numpy import ndarray
+from torch import Tensor
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -33,12 +34,9 @@ from libs.utils.torch_utils import select_device
 
 
 class Detector:
-    def __init__(self, frames: List, ids: List, debug: bool = True):
+    def __init__(self, debug: bool = True):
         self._logger: logging.Logger = logging.getLogger(type(self).__name__)
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
-
-        self.frames = frames
-        self.ids = ids
 
         self.weights = "yolov5n.pt"  # model path or triton URL
         self.data = "data/coco128.yaml"  # dataset.yaml path
@@ -61,27 +59,31 @@ class Detector:
         imgsz = check_img_size(self.imgsz, s=self.stride)  # check image size
         self.model.warmup(imgsz=(1 if self.pt or self.model.triton else 1, 3, *imgsz))  # warmup
 
-    def detect_person_bbox(self) -> List:
+    def detect_person_bbox(self, images: List[ndarray]) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
         self._logger.debug('run Detector')
-
-        im = _prepare_im(self, self.frames)
+        im = _prepare_im(self, images)
 
         bbox = []
+        class_id = []
         for image in im:
             pred = self.model(image, augment=False, visualize=False)
 
             pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, self.classes, self.agnostic_nms,
                                        max_det=self.max_det)
-            bbox.append(pred[0])
+            bbox.append([pred[0][i][0:4] for i in range(len(pred[0]))])
+            class_id.append([pred[0][i][-1] for i in range(len(pred[0]))])
 
-        return bbox
+        return bbox, class_id
 
 
-def _prepare_im(self, frames: List) -> ndarray:
-    im = [letterbox(np.asarray(frame), 640, stride=32, auto=True)[0] for frame in frames]
-    im = [image.transpose((2, 0, 1))[::-1] for image in im]
-    im = [np.ascontiguousarray(image) for image in im]
-    im = [torch.from_numpy(image).to(self.model.device) for image in im]
-    im = [image.half() if self.model.fp16 else image.float() for image in im]
-    im = np.asarray([image / 255 for image in im])
-    return im
+def _prepare_im(self, images: List) -> List[ndarray]:
+    im_to_detect = images.copy()
+    im_to_detect = [letterbox(np.asarray(im), 640, stride=32, auto=True)[0] for im in im_to_detect]
+    im_to_detect = [im.transpose((2, 0, 1))[::-1] for im in im_to_detect]
+    im_to_detect = [np.ascontiguousarray(im) for im in im_to_detect]
+    im_to_detect = [torch.from_numpy(im).to(self.model.device) for im in im_to_detect]
+    im_to_detect = [im.half() if self.model.fp16 else im.float() for im in im_to_detect]
+    im_to_detect = np.asarray([im / 255 for im in im_to_detect])
+    if len(im_to_detect.shape) == 3:
+        im_to_detect = im_to_detect[None]
+    return im_to_detect
