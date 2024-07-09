@@ -46,4 +46,4 @@ if __name__ == "__main__":
     for m in opt.model:
         models[m] = torch.hub.load("ultralytics/yolov5", m, force_reload=True, skip_validation=True)
 
-    app.detect_person_bbox(host="0.0.0.0", port=opt.port)  # debug=True causes Restarting with stat
+    app.get_bbox(host="0.0.0.0", port=opt.port)  # debug=True causes Restarting with stat

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import logging
 import os
-import platform
 import sys
-from pathlib import Path
-from typing import List, Tuple
-
-import numpy as np
 import torch
-from numpy import ndarray
+import logging
+import numpy as np
+from typing import List
 from torch import Tensor
+from pathlib import Path
+from numpy import ndarray
+from objects import DetectedObject
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -18,17 +17,13 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from ultralytics.utils.plotting import Annotator, colors
-
 from libs.utils.augmentations import letterbox
 from libs.models.common import DetectMultiBackend
 from libs.utils.general import (
-    LOGGER,
-    Profile,
     check_img_size,
-    cv2,
     non_max_suppression,
     scale_boxes,
+    xyxy2xywh
 )
 from libs.utils.torch_utils import select_device
 
@@ -59,21 +54,35 @@ class Detector:
         imgsz = check_img_size(self.imgsz, s=self.stride)  # check image size
         self.model.warmup(imgsz=(1 if self.pt or self.model.triton else 1, 3, *imgsz))  # warmup
 
-    def detect_person_bbox(self, images: List[ndarray]) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
+    def get_bbox(self, images: List[ndarray], ids: List) -> List[List[DetectedObject]]:
         self._logger.debug('run Detector')
+        im0 = np.asarray(images.copy())
+        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]
         im = _prepare_im(self, images)
 
-        bbox = []
-        class_id = []
-        for image in im:
-            pred = self.model(image, augment=False, visualize=False)
+        pred = self.model(im, augment=False, visualize=False)
 
-            pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, self.classes, self.agnostic_nms,
-                                       max_det=self.max_det)
-            bbox.append([pred[0][i][0:4] for i in range(len(pred[0]))])
-            class_id.append([pred[0][i][-1] for i in range(len(pred[0]))])
+        pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, self.classes, self.agnostic_nms,
+                                   max_det=self.max_det)
 
-        return bbox, class_id
+        bboxes = [[] for i in range(len(ids))]
+
+        for _id in ids:
+            for det in pred:
+                if len(det):
+                    # Rescale boxes from img_size to im0 size
+                    det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
+
+                    # Write results
+                    for *xyxy, conf, cls in reversed(det):
+                        c = int(cls)  # integer class
+                        label = self.names[c]
+                        confidence = float(conf)
+                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        xyxy = List[xywh[0] - xywh[2] / 2, xywh[1] + xywh[3] / 2, xywh[0] + xywh[2] / 2, xywh[1] - xywh[3] / 2]
+                        bboxes[_id].append(DetectedObject(xyxy, label, confidence, _id))
+
+        return bboxes
 
 
 def _prepare_im(self, images: List) -> List[ndarray]:

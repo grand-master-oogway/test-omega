@@ -238,7 +238,7 @@ def train(opt, device):
 
                 # Test
                 if i == len(pbar) - 1:  # last batch
-                    top1, top5, vloss = validate.detect_person_bbox(
+                    top1, top5, vloss = validate.get_bbox(
                         model=ema.ema, dataloader=testloader, criterion=criterion, pbar=pbar
                     )  # test accuracy, loss
                     fitness = top1  # define fitness as top1 accuracy

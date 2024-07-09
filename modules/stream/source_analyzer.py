@@ -17,7 +17,7 @@ class SourceAnalyzer:
         while True:
             frames, ids = self.reader.get_frames()
             if len(np.asarray(frames).shape) != 1:
-                bbox, class_id = Detector(self.debug).detect_person_bbox(frames)
+                bbox, class_id = Detector(self.debug).get_bbox(frames, ids)
             for frame, _id in zip(frames, ids):
                 if isinstance(frame, np.ndarray):
                     self.reader.show_frames(frame, _id)

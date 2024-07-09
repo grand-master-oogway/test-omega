@@ -122,7 +122,7 @@ def train(hyp, opt, device, callbacks):
         opt.workers,
         opt.freeze,
     )
-    callbacks.detect_person_bbox("on_pretrain_routine_start")
+    callbacks.get_bbox("on_pretrain_routine_start")
 
     # Directories
     w = save_dir / "weights"  # weights dir
@@ -295,7 +295,7 @@ def train(hyp, opt, device, callbacks):
                 check_anchors(dataset, model=model, thr=hyp["anchor_t"], imgsz=imgsz)  # run AutoAnchor
             model.half().float()  # pre-reduce anchor precision
 
-        callbacks.detect_person_bbox("on_pretrain_routine_end", labels, names)
+        callbacks.get_bbox("on_pretrain_routine_end", labels, names)
 
     # DDP mode
     if cuda and RANK != -1:
@@ -324,7 +324,7 @@ def train(hyp, opt, device, callbacks):
     scaler = torch.cuda.amp.GradScaler(enabled=amp)
     stopper, stop = EarlyStopping(patience=opt.patience), False
     compute_loss = ComputeLoss(model)  # init loss class
-    callbacks.detect_person_bbox("on_train_start")
+    callbacks.get_bbox("on_train_start")
     LOGGER.info(
         f'Image sizes {imgsz} train, {imgsz} val\n'
         f'Using {train_loader.num_workers * WORLD_SIZE} dataloader workers\n'
@@ -332,7 +332,7 @@ def train(hyp, opt, device, callbacks):
         f'Starting training for {epochs} epochs...'
     )
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
-        callbacks.detect_person_bbox("on_train_epoch_start")
+        callbacks.get_bbox("on_train_epoch_start")
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -354,7 +354,7 @@ def train(hyp, opt, device, callbacks):
             pbar = tqdm(pbar, total=nb, bar_format=TQDM_BAR_FORMAT)  # progress bar
         optimizer.zero_grad()
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
-            callbacks.detect_person_bbox("on_train_batch_start")
+            callbacks.get_bbox("on_train_batch_start")
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
 
@@ -408,7 +408,7 @@ def train(hyp, opt, device, callbacks):
                     ("%11s" * 2 + "%11.4g" * 5)
                     % (f"{epoch}/{epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1])
                 )
-                callbacks.detect_person_bbox("on_train_batch_end", model, ni, imgs, targets, paths, list(mloss))
+                callbacks.get_bbox("on_train_batch_end", model, ni, imgs, targets, paths, list(mloss))
                 if callbacks.stop_training:
                     return
             # end batch ------------------------------------------------------------------------------------------------
@@ -419,7 +419,7 @@ def train(hyp, opt, device, callbacks):
 
         if RANK in {-1, 0}:
             # mAP
-            callbacks.detect_person_bbox("on_train_epoch_end", epoch=epoch)
+            callbacks.get_bbox("on_train_epoch_end", epoch=epoch)
             ema.update_attr(model, include=["yaml", "nc", "hyp", "names", "stride", "class_weights"])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
@@ -443,7 +443,7 @@ def train(hyp, opt, device, callbacks):
             if fi > best_fitness:
                 best_fitness = fi
             log_vals = list(mloss) + list(results) + lr
-            callbacks.detect_person_bbox("on_fit_epoch_end", log_vals, epoch, best_fitness, fi)
+            callbacks.get_bbox("on_fit_epoch_end", log_vals, epoch, best_fitness, fi)
 
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save
@@ -466,7 +466,7 @@ def train(hyp, opt, device, callbacks):
                 if opt.save_period > 0 and epoch % opt.save_period == 0:
                     torch.save(ckpt, w / f"epoch{epoch}.pt")
                 del ckpt
-                callbacks.detect_person_bbox("on_model_save", last, epoch, final_epoch, best_fitness, fi)
+                callbacks.get_bbox("on_model_save", last, epoch, final_epoch, best_fitness, fi)
 
         # EarlyStopping
         if RANK != -1:  # if DDP training
@@ -502,9 +502,9 @@ def train(hyp, opt, device, callbacks):
                         compute_loss=compute_loss,
                     )  # val best model with plots
                     if is_coco:
-                        callbacks.detect_person_bbox("on_fit_epoch_end", list(mloss) + list(results) + lr, epoch, best_fitness, fi)
+                        callbacks.get_bbox("on_fit_epoch_end", list(mloss) + list(results) + lr, epoch, best_fitness, fi)
 
-        callbacks.detect_person_bbox("on_train_end", last, best, epoch, results)
+        callbacks.get_bbox("on_train_end", last, best, epoch, results)
 
     torch.cuda.empty_cache()
     return results

@@ -429,7 +429,7 @@ def train(hyp, opt, device, callbacks):
             ema.update_attr(model, include=["yaml", "nc", "hyp", "names", "stride", "class_weights"])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = validate.detect_person_bbox(
+                results, maps, _ = validate.get_bbox(
                     data_dict,
                     batch_size=batch_size // WORLD_SIZE * 2,
                     imgsz=imgsz,
@@ -498,7 +498,7 @@ def train(hyp, opt, device, callbacks):
                 strip_optimizer(f)  # strip optimizers
                 if f is best:
                     LOGGER.info(f"\nValidating {f}...")
-                    results, _, _ = validate.detect_person_bbox(
+                    results, _, _ = validate.get_bbox(
                         data_dict,
                         batch_size=batch_size // WORLD_SIZE * 2,
                         imgsz=imgsz,
