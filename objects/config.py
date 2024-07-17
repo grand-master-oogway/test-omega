@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
+from typing import Union
 from .source import Source
-from typing import Union, List
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
+from .model_config import ModelConfig
+
 
 
 class ConfigKeys(Enum):
     sources: Source = Source
-
+    model_config: ModelConfig = ModelConfig
     def __getitem__(self, item) -> object:
         return getattr(self, item)
 
@@ -22,6 +24,7 @@ class Config:
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
         self.sources: Union[list[Source], None] = None
+        self.model_config: Union[ModelConfig, None] = None
         self.data_json: dict = data_json
 
     def __getitem__(self, item) -> object:

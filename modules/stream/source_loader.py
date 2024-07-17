@@ -16,7 +16,6 @@ class OpencvReader:
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
         self._sources = sources_data.sources
-        # print('sources_data opencv', sources_data.sources)
 
     def start(self) -> OpencvReader:
         self._logger.debug('create thread for each source')

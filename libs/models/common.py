@@ -656,7 +656,6 @@ class DetectMultiBackend(nn.Module):
 
     def forward(self, im, augment=False, visualize=False):
         """Performs YOLOv5 inference on input images with options for augmentation and visualization."""
-        print(im)
         b, ch, h, w = im.shape  # batch, channel, height, width
         if self.fp16 and im.dtype != torch.float16:
             im = im.half()  # to FP16

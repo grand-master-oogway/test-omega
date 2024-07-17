@@ -1,5 +1,20 @@
 {
   "sources": {
     "rtsp": "rtsp://admin:hVJ5WbnSS@10.2.200.11:554"
+
+  },
+  "model_config": {
+    "weights": "yolov5n.pt",
+    "data": "libs/data/coco128.yaml",
+    "imgsz": [640, 640],
+    "conf_thres": 0.25,
+    "iou_thres": 0.45,
+    "max_det": 1000,
+    "classes": [0],
+    "agnostic_nms": false,
+    "hide_labels": false,
+    "hide_conf": false,
+    "half": false,
+    "dnn": false
   }
 }

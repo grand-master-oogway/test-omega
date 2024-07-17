@@ -32,7 +32,10 @@ def main():
     logger: logging.Logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
     logger.info('test logger')
-    Worker(_read_config(args.config), args.debug).run()
+
+    worker = Worker(_read_config(args.config), args.debug)
+    worker.start()
+    worker.run()
 
 
 if __name__ == '__main__':
