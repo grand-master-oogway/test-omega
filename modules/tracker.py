@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import List
+from typing import List, Tuple, Any, Type
 from collections import OrderedDict
 from scipy.spatial import distance as dist
 
@@ -15,18 +15,18 @@ class CentroidTracker:
 
         self.maxDisappeared = maxDisappeared
 
-    def register(self, centroid, rect):
+    def register(self, centroid, rect) -> None:
         self.originRects[self.nextObjectID] = rect
         self.objects[self.nextObjectID] = centroid
         self.disappeared[self.nextObjectID] = 0
         self.nextObjectID += 1
 
-    def deregister(self, objectID):
+    def deregister(self, objectID) -> None:
         del self.originRects[objectID]
         del self.objects[objectID]
         del self.disappeared[objectID]
 
-    def update(self, rects: List[DetectedObjects]) -> OrderedDict:
+    def update(self, rects: List[DetectedObjects]) -> Tuple[int, List[int], List[List[int]]]:
 
         if len(rects) == 0:
             for objectID in list(self.disappeared.keys()):
@@ -34,12 +34,14 @@ class CentroidTracker:
 
                 if self.disappeared[objectID] > self.maxDisappeared:
                     self.deregister(objectID)
-            return self.objects
+            count = len(self.objects)
+            ids = List[self.objects.keys()]
+            centre = List[self.objects.values()]
+            return count, ids, centre
 
         inputCentroids = np.zeros((len(rects), 2), dtype="int")
 
         for i, rect in enumerate(rects):
-            print('rect --> ', rect)
             cX = rect.centroid[0]
             cY = rect.centroid[1]
             inputCentroids[i] = (cX, cY)
@@ -93,4 +95,8 @@ class CentroidTracker:
                     rect = rects[col]
                     self.register(centroid, rect)
 
-        return self.objects
+
+        count = len(self.objects)
+        ids = list(self.objects.keys())
+        centre = list(self.objects.values())
+        return count, ids, centre

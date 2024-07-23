@@ -1,6 +1,6 @@
 {
   "sources": {
-    "rtsp": "rtsp://admin:hVJ5WbnSS@10.2.200.11:554"
+    "rtsp": "http://pendelcam.kip.uni-heidelberg.de/mjpg/video.mjpg"
 
   },
   "model_config": {
@@ -10,7 +10,7 @@
     "conf_thres": 0.25,
     "iou_thres": 0.45,
     "max_det": 1000,
-    "classes": [0],
+    "classes": null,
     "agnostic_nms": false,
     "hide_labels": false,
     "hide_conf": false,

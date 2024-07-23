@@ -26,12 +26,11 @@ class SourceAnalyzer:
             detected_objects = Detector(self.model_config, self.debug).get_bbox(frames, ids)
             if detected_objects:
                 for frame, _id, detected_object in zip(frames, ids, detected_objects):
-                    trackers[_id].update(detected_object)
+                    count, t_ids, centre = trackers[_id].update(detected_object)
                     if isinstance(frame, np.ndarray):
                         self.reader.show_frames(frame, _id)
             else:
                 for frame, _id in zip(frames, ids):
 
-                    print(frame)
                     if isinstance(frame, np.ndarray):
                         self.reader.show_frames(frame, _id)
