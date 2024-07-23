@@ -35,8 +35,8 @@ class CentroidTracker:
                 if self.disappeared[objectID] > self.maxDisappeared:
                     self.deregister(objectID)
             count = len(self.objects)
-            ids = List[self.objects.keys()]
-            centre = List[self.objects.values()]
+            ids = list(self.objects.keys())
+            centre = list(self.objects.values())
             return count, ids, centre
 
         inputCentroids = np.zeros((len(rects), 2), dtype="int")
