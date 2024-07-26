@@ -17,6 +17,9 @@ class OpencvReader:
 
         self._sources = sources_data.sources
 
+    def __len__(self) -> int:
+        return len(self._sources)
+
     def start(self) -> OpencvReader:
         self._logger.debug('create thread for each source')
         for source in self._sources:

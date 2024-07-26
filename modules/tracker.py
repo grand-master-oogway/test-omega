@@ -1,62 +1,57 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import List, Tuple, Any, Type
+from uuid import uuid4
+from typing import List, Tuple
 from collections import OrderedDict
 from scipy.spatial import distance as dist
 
+from objects import DetectedObject
+
 
 class CentroidTracker:
-    def __init__(self, maxDisappeared=30):
-        self.nextObjectID = 0
+    def __init__(self, maxDisappeared=30, maxDistance=200):
+        self.nextObjectID = str(uuid4())
         self.objects = OrderedDict()
-        self.originRects = OrderedDict()
         self.disappeared = OrderedDict()
 
         self.maxDisappeared = maxDisappeared
+        self.maxDistance = maxDistance
 
-    def register(self, centroid, rect) -> None:
-        self.originRects[self.nextObjectID] = rect
-        self.objects[self.nextObjectID] = centroid
+
+    def register(self, obj: DetectedObject) -> None:
+        obj.count = 0
+        obj.unique_id = self.nextObjectID
+        self.objects[self.nextObjectID] = [obj]
         self.disappeared[self.nextObjectID] = 0
-        self.nextObjectID += 1
+        self.nextObjectID = str(uuid4())
 
     def deregister(self, objectID) -> None:
-        del self.originRects[objectID]
         del self.objects[objectID]
         del self.disappeared[objectID]
 
-    def update(self, rects: List[DetectedObjects]) -> Tuple[int, List[int], List[List[int]]]:
+    def update(self, detection_objects: List[DetectedObject]) -> List[DetectedObject]:
 
-        if len(rects) == 0:
+        if len(detection_objects) == 0:
             for objectID in list(self.disappeared.keys()):
                 self.disappeared[objectID] += 1
 
                 if self.disappeared[objectID] > self.maxDisappeared:
                     self.deregister(objectID)
-            count = len(self.objects)
-            ids = list(self.objects.keys())
-            centre = list(self.objects.values())
-            return count, ids, centre
 
-        inputCentroids = np.zeros((len(rects), 2), dtype="int")
-
-        for i, rect in enumerate(rects):
-            cX = rect.centroid[0]
-            cY = rect.centroid[1]
-            inputCentroids[i] = (cX, cY)
+            return detection_objects
 
         if len(self.objects) == 0:
-            for i in range(0, len(inputCentroids)):
-                centroid = inputCentroids[i]
-                rect = rects[i]
-                self.register(centroid, rect)
+            for detection_object in detection_objects:
+                self.register(detection_object)
+
 
         else:
             objectIDs = list(self.objects.keys())
-            objectCentroids = list(self.objects.values())
 
-            D = dist.cdist(np.array(objectCentroids), inputCentroids)
+
+            D = dist.cdist(np.array([detection_object[-1].centroid for detection_object in self.objects.values()]),
+                           np.array([detection_object.centroid for detection_object in detection_objects]))
 
             rows = D.min(axis=1).argsort()
             cols = D.argmin(axis=1)[rows]
@@ -70,33 +65,27 @@ class CentroidTracker:
                     continue
 
                 objectID = objectIDs[row]
-                self.objects[objectID] = inputCentroids[col]
-                self.originRects[objectID] = rects[col]
-                self.disappeared[objectID] = 0
+                if D[row, col] > self.maxDistance:
+                    continue
 
+                detection_objects[col].count, detection_objects[col].unique_id = self.objects[objectID][
+                                                                                     -1].count + 1, objectID
+                self.objects[objectID].append(detection_objects[col])
+                self.disappeared[objectID] = 0
                 usedRows.add(row)
                 usedCols.add(col)
 
             unusedRows = set(range(0, D.shape[0])).difference(usedRows)
             unusedCols = set(range(0, D.shape[1])).difference(usedCols)
 
-            if D.shape[0] >= D.shape[1]:
+            for row in unusedRows:
+                objectID = objectIDs[row]
+                self.disappeared[objectID] += 1
 
-                for row in unusedRows:
-                    objectID = objectIDs[row]
-                    self.disappeared[objectID] += 1
+                if self.disappeared[objectID] > self.maxDisappeared:
+                    self.deregister(objectID)
 
-                    if self.disappeared[objectID] > self.maxDisappeared:
-                        self.deregister(objectID)
+            for col in unusedCols:
+                self.register(detection_objects[col])
 
-            else:
-                for col in unusedCols:
-                    centroid = inputCentroids[col]
-                    rect = rects[col]
-                    self.register(centroid, rect)
-
-
-        count = len(self.objects)
-        ids = list(self.objects.keys())
-        centre = list(self.objects.values())
-        return count, ids, centre
+        return detection_objects

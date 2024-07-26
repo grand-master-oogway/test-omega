@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, AGPL-3.0 license
+# Ultralytics YOLOv5 🚀, AGPL-3.0 license
 """Run a Flask REST API exposing one or more YOLOv5s models."""
 
 import argparse
@@ -46,4 +46,4 @@ if __name__ == "__main__":
     for m in opt.model:
         models[m] = torch.hub.load("ultralytics/yolov5", m, force_reload=True, skip_validation=True)
 
-    app.get_bbox(host="0.0.0.0", port=opt.port)  # debug=True causes Restarting with stat
+    app.run(host="0.0.0.0", port=opt.port)  # debug=True causes Restarting with stat

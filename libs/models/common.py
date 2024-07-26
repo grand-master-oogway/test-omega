@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, AGPL-3.0 license
+# Ultralytics YOLOv5 🚀, AGPL-3.0 license
 """Common modules."""
 
 import ast
@@ -639,7 +639,7 @@ class DetectMultiBackend(nn.Module):
         elif triton:  # NVIDIA Triton Inference Server
             LOGGER.info(f"Using {w} as Triton Inference Server...")
             check_requirements("tritonclient[all]")
-            from libs.utils.triton import TritonRemoteModel
+            from utils.triton import TritonRemoteModel
 
             model = TritonRemoteModel(url=w)
             nhwc = model.runtime.startswith("tensorflow")
@@ -660,7 +660,7 @@ class DetectMultiBackend(nn.Module):
         if self.fp16 and im.dtype != torch.float16:
             im = im.half()  # to FP16
         if self.nhwc:
-            im = im.permute(0, 2, 3, 1)  # torch BCHW to xnumpy BHWC shape(1,320,192,3)
+            im = im.permute(0, 2, 3, 1)  # torch BCHW to numpy BHWC shape(1,320,192,3)
 
         if self.pt:  # PyTorch
             y = self.model(im, augment=augment, visualize=visualize) if augment or visualize else self.model(im)
@@ -672,7 +672,7 @@ class DetectMultiBackend(nn.Module):
             y = self.net.forward()
         elif self.onnx:  # ONNX Runtime
             im = im.cpu().numpy()  # torch to numpy
-            y = self.session.get_bbox(self.output_names, {self.session.get_inputs()[0].name: im})
+            y = self.session.run(self.output_names, {self.session.get_inputs()[0].name: im})
         elif self.xml:  # OpenVINO
             im = im.cpu().numpy()  # FP32
             y = list(self.ov_compiled_model(im).values())
@@ -703,7 +703,7 @@ class DetectMultiBackend(nn.Module):
         elif self.paddle:  # PaddlePaddle
             im = im.cpu().numpy().astype(np.float32)
             self.input_handle.copy_from_cpu(im)
-            self.predictor.get_bbox()
+            self.predictor.run()
             y = [self.predictor.get_output_handle(x).copy_to_cpu() for x in self.output_names]
         elif self.triton:  # NVIDIA Triton Inference Server
             y = self.model(im)
@@ -1066,6 +1066,9 @@ class Classify(nn.Module):
     def __init__(
         self, c1, c2, k=1, s=1, p=None, g=1, dropout_p=0.0
     ):  # ch_in, ch_out, kernel, stride, padding, groups, dropout probability
+        """Initializes YOLOv5 classification head with convolution, pooling, and dropout layers for input to output
+        channel transformation.
+        """
         super().__init__()
         c_ = 1280  # efficientnet_b0 size
         self.conv = Conv(c1, c_, k, s, autopad(k, p), g)

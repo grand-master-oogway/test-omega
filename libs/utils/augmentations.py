@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, AGPL-3.0 license
+# Ultralytics YOLOv5 🚀, AGPL-3.0 license
 """Image augmentation functions."""
 
 import math
@@ -123,6 +123,7 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleF
     shape = im.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
         new_shape = (new_shape, new_shape)
+
     # Scale ratio (new / old)
     r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
     if not scaleup:  # only scale down, do not scale up (for better val mAP)
@@ -156,6 +157,7 @@ def random_perspective(
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.1, 0.1), scale=(0.9, 1.1), shear=(-10, 10))
     # targets = [cls, xyxy]
 
+    """Applies random perspective transformation to an image, modifying the image and corresponding labels."""
     height = im.shape[0] + border[0] * 2  # shape(h,w,c)
     width = im.shape[1] + border[1] * 2
 
@@ -335,6 +337,9 @@ def classify_albumentations(
     auto_aug=False,
 ):
     # YOLOv5 classification Albumentations (optional, only used if package is installed)
+    """Sets up and returns Albumentations transforms for YOLOv5 classification tasks depending on augmentation
+    settings.
+    """
     prefix = colorstr("albumentations: ")
     try:
         import albumentations as A

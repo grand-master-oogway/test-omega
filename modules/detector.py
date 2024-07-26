@@ -30,8 +30,11 @@ from libs.utils.torch_utils import select_device
 
 class Detector:
     def __init__(self, model_config: ModelConfig, debug: bool = True):
+
         self._logger: logging.Logger = logging.getLogger(type(self).__name__)
         self._logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
+        self._logger.debug('initialize Detector')
 
         self.weights = model_config.weights
         self.imgsz = model_config.imgsz
@@ -47,7 +50,6 @@ class Detector:
         self.stride, self.names, self.pt = self.model.stride, self.model.names, self.model.pt
 
     def get_bbox(self, images: List, ids: List) -> Union[List[List[DetectedObject]], None]:
-        self._logger.debug('run Detector')
         if len(np.asarray(images).shape) == 1:
             return None
         images_to_detect = self._prepare_im(images)
@@ -58,7 +60,7 @@ class Detector:
         bboxes: List[List[DetectedObject]] = []
 
         for i, det in enumerate(pred):
-            detected_obj: List[DetectedObject] = []
+            detected_object: List[DetectedObject] = []
             im0 = images[i]
             if len(det):
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]
@@ -73,11 +75,11 @@ class Detector:
                     label = self.names[c]
                     centroid = [int((x1 + x2) / 2.0), int((y1 + y2) / 2.0)]
 
-                    detected_obj.append(
-                        DetectedObject(bbox=[x1, y1, x2, y2], class_name=label, conf=confidence, centroid=centroid,
+                    detected_object.append(
+                        DetectedObject(bbox=np.asarray([x1, y1, x2, y2], dtype=int), class_name=label, conf=confidence, centroid=centroid,
                                        source_id=ids[i]))
 
-            bboxes.append(detected_obj)
+            bboxes.append(detected_object)
         return bboxes
 
     def _prepare_im(self, images: List) -> Tensor:

@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, AGPL-3.0 license
+# Ultralytics YOLOv5 🚀, AGPL-3.0 license
 """
 Train a YOLOv5 segment model on a segment dataset Models and datasets download automatically from the latest YOLOv5
 release.
@@ -214,7 +214,11 @@ def train(hyp, opt, device, callbacks):
     if opt.cos_lr:
         lf = one_cycle(1, hyp["lrf"], epochs)  # cosine 1->hyp['lrf']
     else:
-        lf = lambda x: (1 - x / epochs) * (1.0 - hyp["lrf"]) + hyp["lrf"]  # linear
+
+        def lf(x):
+            """Linear learning rate scheduler decreasing from 1 to hyp['lrf'] over 'epochs'."""
+            return (1 - x / epochs) * (1.0 - hyp["lrf"]) + hyp["lrf"]  # linear
+
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)  # plot_lr_scheduler(optimizer, scheduler, epochs)
 
     # EMA
@@ -429,7 +433,7 @@ def train(hyp, opt, device, callbacks):
             ema.update_attr(model, include=["yaml", "nc", "hyp", "names", "stride", "class_weights"])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = validate.get_bbox(
+                results, maps, _ = validate.run(
                     data_dict,
                     batch_size=batch_size // WORLD_SIZE * 2,
                     imgsz=imgsz,
@@ -498,7 +502,7 @@ def train(hyp, opt, device, callbacks):
                 strip_optimizer(f)  # strip optimizers
                 if f is best:
                     LOGGER.info(f"\nValidating {f}...")
-                    results, _, _ = validate.get_bbox(
+                    results, _, _ = validate.run(
                         data_dict,
                         batch_size=batch_size // WORLD_SIZE * 2,
                         imgsz=imgsz,
