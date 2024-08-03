@@ -2,6 +2,9 @@ from typing import Union, Tuple
 from dataclasses import dataclass
 @dataclass
 class ModelConfig:
+    """
+    Dataclass for model configure
+    """
     weights: str
     data: str
     imgsz: Tuple[int, int]

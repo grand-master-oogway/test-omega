@@ -5,6 +5,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Source:
+    """
+    Dataclass for sources configure
+    """
     rtsp: Union[str, int]
     frame: np.ndarray = 0
 
